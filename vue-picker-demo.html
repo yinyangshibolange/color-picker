@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+  </head>
+  <body>
+    <div id="vue_demo" class="">
+
+    </div>
+    <script>
+    const vueInstance = new Vue ({
+      el: '#vue_demo',
+      template: '<div class="p-20 bg-f width-350 height-240 border-s-e">  <div class="flex flex-bt">    <div class="posi-r over-h">      <div ref="canvasBox" class="width-300 height-200">        <canvas ref="canvas" :width="width" :height="height"></canvas>      </div>      <span ref="point" class="width-10 height-10 border-s-e border-r_50 posi-a t0 l0"></span>    </div>    <div class="posi-r">      <div ref="canvasBar" class="width-30 height-200">        <canvas ref="bar" :width="barWidth" :height="height"></canvas>      </div>      <span ref="barPoint" class="height-5 bg-f posi-a t0 l0 r0 op-8 cursor-pointer"></span>    </div>  </div>  <div class="flex flex-bt m-t-10">    <div class="flex flex-y-center">      <em class="width-30 height-30 bg-edit m-r-10" :style="{\'background\':color}"></em>      <input v-model="color" class="width-150 border-s-e fs-14 height-30 p-lr-10" />    </div>    <div class="flex flex-y-center flex-s-0">      <span class="color-edit fs-12 m-r-20 cursor-pointer">清空</span>      <span class="cursor-pointer color-f p-lr-10 p-tb-5 fs-12 bg-edit">确定</span>    </div>  </div></div>',
+      data() {
+        return {
+          canvas: null,
+          ctx: null,
+          width: 0,
+          barWidth: 0,
+          height: 0,
+          curColor: 'red',
+          color: '',
+        };
+      },
+      methods: {
+        async init() {
+          const canvasBox = this.$refs.canvasBox;
+          this.width = canvasBox.clientWidth;
+          this.height = canvasBox.clientHeight;
+          const canvasBarBox = this.$refs.canvasBar;
+          const width = canvasBarBox.clientWidth;
+          this.barWidth = width;
+          await 10;
+          this.canvas = this.$refs.canvas;
+          this.ctx = this.canvas.getContext('2d');
+          this.colorBox(this.curColor);
+          this.colorBar();
+          this.bind();
+        },
+        colorBar() {
+          const canvasBar = this.$refs.bar;
+          const ctx = canvasBar.getContext('2d');
+          const gradientBar = ctx.createLinearGradient(0, 0, 0, this.height);
+          gradientBar.addColorStop(0, '#f00');
+          gradientBar.addColorStop(1 / 6, '#f0f');
+          gradientBar.addColorStop(2 / 6, '#00f');
+          gradientBar.addColorStop(3 / 6, '#0ff');
+          gradientBar.addColorStop(4 / 6, '#0f0');
+          gradientBar.addColorStop(5 / 6, '#ff0');
+          gradientBar.addColorStop(1, '#f00');
+          ctx.fillStyle = gradientBar;
+          ctx.fillRect(0, 0, this.barWidth, this.height);
+        },
+        colorBox(color) {
+          // 底色填充，也就是（举例红色）到白色
+          var gradientBase = this.ctx.createLinearGradient(
+            0,
+            0,
+            this.canvas.width,
+            this.canvas.height,
+          );
+          gradientBase.addColorStop(1, color);
+          gradientBase.addColorStop(0, 'rgba(255,255,255,1)');
+          this.ctx.fillStyle = gradientBase;
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+          // 第二次填充，黑色到透明
+          var my_gradient1 = this.ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            this.canvas.width,
+          );
+          my_gradient1.addColorStop(0, 'rgba(0,0,0,0)');
+          my_gradient1.addColorStop(1, 'rgba(0,0,0,1)');
+          this.ctx.fillStyle = my_gradient1;
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        },
+        bind() {
+          const self = this;
+          const canvasBox = this.$refs.canvasBox;
+          const canvasBarBox = this.$refs.canvasBar;
+          const barPoint = this.$refs.barPoint;
+          const point = self.$refs.point;
+          const canvasBar = this.$refs.bar;
+          const ctx = canvasBar.getContext('2d');
+          const handler = (e) => {
+            var ePos = {
+              x: e.layerX || e.offsetX,
+              y: e.layerY || e.offsetY,
+            };
+
+            point.style.left = ePos.x - point.clientWidth / 2 + 'px';
+            point.style.top = ePos.y - point.clientHeight / 2 + 'px';
+            let rgbaStr = '#000';
+            rgbaStr = self.getRgbaAtPoint(ePos, this.ctx);
+
+            this.outColor(rgbaStr.slice(0, 3).join());
+          };
+          const barHandler = (e) => {
+            var ePos = {
+              x: e.layerX || e.offsetX,
+              y: e.layerY || e.offsetY,
+            };
+
+            // barPoint.style.left = ePos.x - barPoint.clientWidth / 2 + 'px';
+            barPoint.style.top = ePos.y - barPoint.clientHeight / 2 + 'px';
+            let rgbaStr = '#000';
+            rgbaStr = self.getRgbaAtPoint(ePos, ctx);
+            this.colorBox('rgb(' + rgbaStr.slice(0, 3).join() + ')');
+          };
+          canvasBox.onmousedown = (e) => {
+            handler(e);
+            canvasBox.onmousemove = (e) => handler(e);
+            canvasBox.onmouseup = (e) => {
+              handler(e);
+              canvasBox.onmouseup = canvasBox.onmousemove = null;
+            };
+            point.onmouseup = (e) => {
+              canvasBox.onmouseup = canvasBox.onmousemove = null;
+            };
+          };
+          canvasBarBox.onmousedown = (e) => {
+            barHandler(e);
+            canvasBarBox.onmousemove = (e) => barHandler(e);
+            canvasBarBox.onmouseup = (e) => {
+              barHandler(e);
+              canvasBarBox.onmouseup = canvasBarBox.onmousemove = null;
+            };
+            barPoint.onmouseup = (e) => {
+              canvasBarBox.onmouseup = canvasBarBox.onmousemove = null;
+            };
+          };
+        },
+        getRgbaAtPoint(pos, ctx) {
+          let imgData = ctx.getImageData(pos.x, pos.y, 1, 1);
+
+          let data = imgData.data;
+          return [data[0], data[1], data[2], 1];
+        },
+        outColor(rgb) {
+          this.color = 'rgb(' + rgb + ')';
+        },
+      },
+      mounted() {
+        this.init();
+        // this.resize(this.init);
+      },
+    });
+    </script>
+
+  </body>
+</html>
