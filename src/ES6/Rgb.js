@@ -1,14 +1,12 @@
 // 原理及公式参考地址: https://www.rapidtables.com/convert/color/index.html
-export class ColorPicker {
+export class Rgb {
   hsv;
   rgb;
-  alpha;
 
   huebgrgb; // 显示用rgb色相背景色,选择色相时用
 
-  constructor(color, alpha = null) {
+  constructor(color) {
     let src = {
-      alpha
     }
     if (color instanceof Array) {
       src.rgb = color
@@ -51,9 +49,7 @@ export class ColorPicker {
       this.hsv = this.rgb2hsv(color.rgb)
       this.huebgrgb = this.hsv2rgb([this.hsv[0], 1, 1])
     }
-    if (color.alpha !== undefined &&color.alpha !== null ) {
-      this.alpha = Number(color.alpha)
-    }
+
     if (color.h !== undefined || color.s !== undefined || color.v !== undefined) {
       if (!this.hsv || this.hsv[0] !== color.h) this.huebgrgb = this.hsv2rgb([color.h, 1, 1])
       if (color.h !== undefined) this.hsv = [color.h, this.hsv[1], this.hsv[2]]
