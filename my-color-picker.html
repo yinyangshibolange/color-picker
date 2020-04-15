@@ -5,18 +5,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="height=device-height, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+<script type="text/javascript" src="./src/js/ColorPicker.js"></script>
   <title>颜色选择器</title>
   <style media="screen">
     * {
       padding: 0;
       margin: 0;
     }
-    .colors {
-      margin-left: 10px;
+    .color_picker_panel {
+
+        position: relative;
     }
-  .alpha {
-    margin-top: 10px;
+  .color_picker_panel .saturation {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
   }
+
+  .color_picker_panel .value {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
+
   .preview {
     float: left;
     margin-left: 10px;
@@ -27,27 +42,30 @@
 
 <body>
   <div class="">
-    <div class="">
-      <canvas class="panel" id="color_picker_panel"></canvas>
-
-      <canvas class="colors" id="color_picker_colors"></canvas>
-
-
+    <div class="color_picker_panel" id="color_picker_panel" style="background: rgb(255, 0, 0);">
+      <div class="saturation" style="background: linear-gradient(to right,white , #ffffff00,   );"></div>
+      <div class="value" style="background: linear-gradient(to top, black, #ffffff00);"></div>
     </div>
-    <canvas class="alpha" id="color_picker_alpha"></canvas>
+    <div class="colors" id="color_picker_colors"> </div>
+    <div class="alpha" id="color_picker_alpha" background="url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAWElEQVRIiWM8fubkfwYygKWJOSM5+mCAhRLNoxaPWjxq8ajFoxbTyeL/DAfJ0Xjs3Cl7Siwmu4Yht1aDgZEYx6MWj1o8avGoxaMWD3qLya5X//4nqx6HAQC7RBGFzolqTAAAAABJRU5ErkJggg==)">
+<div class="" style="background: rgba(0, 0, 0, 0) linear-gradient(to left, rgb(37, 207, 31), rgba(255, 255, 255, 0)) repeat scroll 0% 0%;">
+
+</div>
+    </div>
 
     <div id="preview" class="preview"></div>
 
   </div>
   <script type="text/javascript">
     (function() {
-
       var cur_r
       var cur_g
       var cur_b
       var cur_alpha
 
       var curColor = 'rgba(255,0,0,1)';
+
+      var colorPickerInstance
 
       const size = {
         small: {
@@ -112,88 +130,32 @@
       const color_picker_alpha = document.getElementById("color_picker_alpha")
       const preview = document.getElementById("preview")
 
-      const color_picker_colors_ctx = color_picker_colors.getContext('2d')
-      const color_picker_panel_ctx = color_picker_panel.getContext('2d')
-      const color_picker_alpha_ctx = color_picker_alpha.getContext('2d')
-
       init()
 
       function initCanvasSize(sizeType) {
-        color_picker_colors.width = size[sizeType].colors.width
-        color_picker_colors.height = size[sizeType].colors.height
+        color_picker_colors.style.width = size[sizeType].colors.width + 'px'
+        color_picker_colors.style.height = size[sizeType].colors.height + 'px'
 
-        color_picker_panel.width = size[sizeType].panel.width
-        color_picker_panel.height = size[sizeType].panel.height
+        color_picker_panel.style.width = size[sizeType].panel.width + 'px'
+        color_picker_panel.style.height = size[sizeType].panel.height + 'px'
 
-        color_picker_alpha.width = size[sizeType].alpha.width
-        color_picker_alpha.height = size[sizeType].alpha.height
+        color_picker_alpha.style.width = size[sizeType].alpha.width + 'px'
+        color_picker_alpha.style.height = size[sizeType].alpha.height + 'px'
 
-        preview.style.width = size[sizeType].preview.width
-        preview.style.height = size[sizeType].preview.height
+        preview.style.width = size[sizeType].preview.width + 'px'
+        preview.style.height = size[sizeType].preview.height + 'px'
       }
 
       function updatePreview() {
 
       }
 
-
       function init() {
+        // colorPickerInstance = new ColorPicker()
         initCanvasSize(color_picker_size)
-        colorpanel()
-        colorBox(curColor)
-        colorAlpha()
+
       }
 
-      function colorpanel() {
-        var width = color_picker_colors.offsetWidth
-        var height = color_picker_colors.offsetHeight
-        var gradientBar = color_picker_colors_ctx.createLinearGradient(0, 0, 0, height);
-        gradientBar.addColorStop(0, '#f00');
-        gradientBar.addColorStop(1 / 6, '#f0f');
-        gradientBar.addColorStop(2 / 6, '#00f');
-        gradientBar.addColorStop(3 / 6, '#0ff');
-        gradientBar.addColorStop(4 / 6, '#0f0');
-        gradientBar.addColorStop(5 / 6, '#ff0');
-        gradientBar.addColorStop(1, '#f00');
-
-        color_picker_colors_ctx.fillStyle = gradientBar;
-        color_picker_colors_ctx.fillRect(0, 0, width, height);
-
-        color_picker_colors.addEventListener('mousedown', function(ev) {
-          const ePos = {
-            x: ev.offsetX || ev.layerX,
-            y: ev.offsetY || ev.layerY
-          }
-          console.log(ePos)
-        })
-      }
-
-      function colorBox(color) {
-        const width = color_picker_panel.offsetWidth
-        const height = color_picker_panel.offsetHeight
-        // 底色填充，也就是（举例红色）到白色
-        var gradientBase = color_picker_panel_ctx.createLinearGradient(0, 0, width, 0);
-        gradientBase.addColorStop(1, color); // 选定颜色
-        gradientBase.addColorStop(0, 'rgba(255,255,255,1)'); // 白色
-        color_picker_panel_ctx.fillStyle = gradientBase;
-        color_picker_panel_ctx.fillRect(0, 0, width, height);
-        // 第二次填充，黑色到透明
-        var my_gradient1 = color_picker_panel_ctx.createLinearGradient(0, 0, 0, height);
-        my_gradient1.addColorStop(0, 'rgba(0,0,0,0)'); // 透明
-        my_gradient1.addColorStop(1, 'rgba(0,0,0,1)'); // 黑色
-        color_picker_panel_ctx.fillStyle = my_gradient1;
-        color_picker_panel_ctx.fillRect(0, 0, width, height);
-      }
-
-      function colorAlpha(color) {
-        const width = color_picker_alpha.offsetWidth
-        const height = color_picker_alpha.offsetHeight
-        var gradientBase = color_picker_alpha_ctx.createLinearGradient(0, 0, width, 0)
-        gradientBase.addColorStop(0, 'rgba(0, 0, 0 ,0)')
-        gradientBase.addColorStop(1, 'rgba(0, 0, 0, 1)')
-        color_picker_alpha_ctx.fillStyle = gradientBase
-        color_picker_alpha_ctx.fillRect(0, 0, width, height);
-      }
     })()
   </script>
 </body>
